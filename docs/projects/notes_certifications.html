@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes & Certifications | Mark Perfecto</title>
+  <link rel="stylesheet" href="../dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="../index.html" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="../index.html#home" class="nav-link">Home</a>
+        <a href="../projects.html" class="nav-link text-blue-600">Projects</a>
+        <a href="../index.html#contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <div class="flex items-start justify-between gap-6 flex-wrap">
+      <header class="max-w-3xl">
+        <h1 class="text-4xl font-bold gradient-text">Notes & Certifications</h1>
+        <p class="mt-4 text-gray-600 text-lg">A hub for academic notes, learning resources, and verified certificates.</p>
+      </header>
+      <div class="shrink-0">
+        <a href="../projects.html" class="btn-secondary">Back to Projects</a>
+      </div>
+    </div>
+
+    <section class="mt-10 grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-semibold">Notes</h2>
+          <p class="mt-2 text-gray-600">Link PDFs, markdown notes, or external resources here.</p>
+          <div class="mt-5 space-y-3">
+            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="#" target="_blank" rel="noreferrer">Open notes PDF</a>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-semibold">Certificates</h2>
+          <p class="mt-2 text-gray-600">Replace placeholders with real images and verification links.</p>
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <a href="#" target="_blank" rel="noreferrer" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition block">
+              <img class="w-full h-40 object-cover rounded-lg bg-gray-200" alt="Certificate 1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500'%3E%3Crect width='900' height='500' fill='%23e5e7eb'/%3E%3Ctext x='40' y='270' font-family='Segoe UI,Arial' font-size='44' fill='%23374151'%3ECertificate 1%3C/text%3E%3C/svg%3E" />
+              <div class="mt-3 font-semibold">Certificate title</div>
+              <div class="text-sm text-gray-600">Verification link</div>
+            </a>
+            <a href="#" target="_blank" rel="noreferrer" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition block">
+              <img class="w-full h-40 object-cover rounded-lg bg-gray-200" alt="Certificate 2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500'%3E%3Crect width='900' height='500' fill='%23e5e7eb'/%3E%3Ctext x='40' y='270' font-family='Segoe UI,Arial' font-size='44' fill='%23374151'%3ECertificate 2%3C/text%3E%3C/svg%3E" />
+              <div class="mt-3 font-semibold">Certificate title</div>
+              <div class="text-sm text-gray-600">Verification link</div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-xl font-semibold">Downloads</h2>
+          <div class="mt-5 space-y-3">
+            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="#" target="_blank" rel="noreferrer">Download notes bundle</a>
+            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="#" target="_blank" rel="noreferrer">Download certificate pack</a>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-xl font-semibold">Tip</h2>
+          <p class="mt-2 text-gray-600">If you want uploadable certificates, we can add a dynamic endpoint in the Express app.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
