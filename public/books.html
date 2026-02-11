@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Books | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/projects" class="nav-link">Projects</a>
+        <a href="/books" class="nav-link text-blue-600">Books</a>
+        <a href="/videos" class="nav-link">Videos</a>
+        <a href="/files" class="nav-link">Files</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <header class="max-w-3xl">
+      <h1 class="text-4xl font-bold gradient-text">Books</h1>
+      <p class="mt-4 text-gray-600 text-lg">Upload PDFs and I’ll generate pages in a later iteration (Python automation).</p>
+    </header>
+
+    <section class="mt-10 grid lg:grid-cols-2 gap-10">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Upload a PDF</h2>
+        <form id="book-form" class="mt-6 space-y-4">
+          <input type="file" name="pdf" accept="application/pdf" required class="w-full" />
+          <button class="btn-primary" type="submit">Upload</button>
+          <div id="book-msg" class="text-sm text-gray-600"></div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Uploaded PDFs</h2>
+        <p class="mt-2 text-gray-600">Each PDF is converted into browsable pages.</p>
+        <div id="book-list" class="mt-6 space-y-6"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('book-form');
+    const msg = document.getElementById('book-msg');
+    const list = document.getElementById('book-list');
+
+    function el(tag, className, text) {
+      const n = document.createElement(tag);
+      if (className) n.className = className;
+      if (typeof text === 'string') n.textContent = text;
+      return n;
+    }
+
+    function renderBook(book) {
+      const wrap = el('div', 'bg-gray-50 rounded-2xl p-6');
+      const top = el('div', 'flex items-start justify-between gap-4');
+
+      const meta = el('div');
+      const titleRow = el('div');
+      const titleLink = el('a', 'text-lg font-semibold text-blue-600 hover:text-blue-700', book.title);
+      titleLink.href = book.indexUrl || '#';
+      titleLink.target = '_blank';
+      titleLink.rel = 'noreferrer';
+      titleRow.appendChild(titleLink);
+      meta.appendChild(titleRow);
+      meta.appendChild(el('div', 'text-gray-600 text-sm mt-1', `${book.pageCount} pages • ${new Date(book.createdAt).toLocaleString()}`));
+
+      const actions = el('div', 'shrink-0 flex items-center gap-3');
+      const openIndex = el('a', 'text-blue-600 font-semibold hover:text-blue-700', 'Open pages');
+      openIndex.href = book.indexUrl || '#';
+      openIndex.target = '_blank';
+      openIndex.rel = 'noreferrer';
+      actions.appendChild(openIndex);
+
+      const pdf = el('a', 'text-blue-600 font-semibold hover:text-blue-700', 'Open PDF');
+      pdf.href = book.pdf.url;
+      pdf.target = '_blank';
+      pdf.rel = 'noreferrer';
+      actions.appendChild(pdf);
+
+      const pdfDl = el('a', 'text-gray-600 hover:text-blue-600', 'Download');
+      pdfDl.href = `/download/pdfs/${book.pdf.url.split('/').pop()}`;
+      actions.appendChild(pdfDl);
+
+      top.appendChild(meta);
+      top.appendChild(actions);
+      wrap.appendChild(top);
+
+      const pages = el('div', 'mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3');
+      (book.pages || []).slice(0, 12).forEach((p) => {
+        const a = el('a', 'bg-white rounded-lg p-3 shadow-sm hover:shadow-lg transition text-blue-600 font-semibold', `Page ${p.page}`);
+        a.href = p.url;
+        a.target = '_blank';
+        a.rel = 'noreferrer';
+        pages.appendChild(a);
+      });
+
+      if ((book.pages || []).length > 12) {
+        pages.appendChild(el('div', 'text-gray-600 text-sm col-span-2 sm:col-span-3', `+ ${(book.pages || []).length - 12} more pages...`));
+      }
+
+      wrap.appendChild(pages);
+      return wrap;
+    }
+
+    async function loadBooks() {
+      list.innerHTML = '';
+      const res = await fetch('/api/books');
+      const data = await res.json().catch(() => ({}));
+      const books = data.books || [];
+      if (books.length === 0) {
+        list.appendChild(el('div', 'text-gray-600', 'No books yet. Upload a PDF to generate pages.'));
+        return;
+      }
+      books.forEach((b) => list.appendChild(renderBook(b)));
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+
+      const fd = new FormData(form);
+      const res = await fetch('/api/upload/book', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Upload failed.';
+        return;
+      }
+
+      form.reset();
+      msg.textContent = 'Uploaded and converted.';
+      await loadBooks();
+    });
+
+    loadBooks();
+  </script>
+</body>
+</html>

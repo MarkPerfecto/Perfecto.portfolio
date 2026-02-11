@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python GUI Character Creator | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/projects" class="nav-link text-blue-600">Projects</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/books" class="nav-link">Books</a>
+        <a href="/videos" class="nav-link">Videos</a>
+        <a href="/files" class="nav-link">Files</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <div class="flex items-start justify-between gap-6 flex-wrap">
+      <header class="max-w-3xl">
+        <h1 class="text-4xl font-bold gradient-text">Python GUI Character Creator</h1>
+        <p class="mt-4 text-gray-600 text-lg">A Python desktop GUI app that lets you build a custom character with interactive options and exports.</p>
+      </header>
+      <div class="shrink-0">
+        <a href="/projects" class="btn-secondary">Back to Projects</a>
+      </div>
+    </div>
+
+    <section class="mt-10 grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-semibold">Overview</h2>
+          <p class="mt-3 text-gray-600">This project focuses on a clean GUI workflow, responsive inputs, and structured output. It’s designed to be beginner-friendly while still being extensible.</p>
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-xl p-5">
+              <div class="font-semibold">Highlights</div>
+              <ul class="mt-2 text-gray-600 space-y-2">
+                <li>Custom attributes & presets</li>
+                <li>Export / save character profiles</li>
+                <li>Input validation and UX feedback</li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-5">
+              <div class="font-semibold">Stack</div>
+              <div class="mt-2 text-gray-600">Python (GUI), JSON, local files</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-semibold">Demo Video</h2>
+          <p class="mt-2 text-gray-600">If you upload your demo to <code class="px-2 py-1 bg-gray-100 rounded">/uploads/videos</code>, you can point this player to it.</p>
+          <video class="mt-5 w-full rounded-xl shadow-lg" controls>
+            <source src="/uploads/videos/character_demo.mp4" type="video/mp4" />
+          </video>
+          <div class="mt-3 text-sm text-gray-500">If the video is missing, add <code class="px-1 bg-gray-100 rounded">character_demo.mp4</code> to <code class="px-1 bg-gray-100 rounded">uploads/videos</code>.</div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-semibold">Screenshots</h2>
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <img class="w-full h-48 object-cover rounded-xl bg-gray-100" alt="Screenshot 1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500'%3E%3Crect width='900' height='500' fill='%23e5e7eb'/%3E%3Ctext x='40' y='270' font-family='Segoe UI,Arial' font-size='44' fill='%23374151'%3EScreenshot 1%3C/text%3E%3C/svg%3E" />
+            <img class="w-full h-48 object-cover rounded-xl bg-gray-100" alt="Screenshot 2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500'%3E%3Crect width='900' height='500' fill='%23e5e7eb'/%3E%3Ctext x='40' y='270' font-family='Segoe UI,Arial' font-size='44' fill='%23374151'%3EScreenshot 2%3C/text%3E%3C/svg%3E" />
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-xl font-semibold">Links & Downloads</h2>
+          <div class="mt-5 space-y-3">
+            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="/download/files/character-creator-source.zip">Download source code</a>
+            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="https://github.com/MarkPerfecto/Character-creator-anime" target="_blank" rel="noreferrer">View on GitHub</a>
+          </div>
+          <div class="mt-4 text-sm text-gray-500">Update the GitHub URL when ready. For downloads, place the zip in <code class="px-1 bg-gray-100 rounded">uploads/files</code>.</div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-xl font-semibold">Try it (interactive)</h2>
+          <p class="mt-2 text-gray-600">For desktop GUI apps, the best "interactive demo" is usually a screen recording + downloadable build. If you later create a web demo, we can embed it here.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

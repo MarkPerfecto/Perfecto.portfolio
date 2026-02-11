@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Videos | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/books" class="nav-link">Books</a>
+        <a href="/projects" class="nav-link">Projects</a>
+        <a href="/videos" class="nav-link text-blue-600">Videos</a>
+        <a href="/files" class="nav-link">Files</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <header class="max-w-3xl">
+      <h1 class="text-4xl font-bold gradient-text">Videos</h1>
+      <p class="mt-4 text-gray-600 text-lg">Upload videos and play them back with download links.</p>
+    </header>
+
+    <section class="mt-10 grid lg:grid-cols-2 gap-10">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Upload a video</h2>
+        <form id="video-form" class="mt-6 space-y-4">
+          <input type="file" name="video" accept="video/*" required class="w-full" />
+          <button class="btn-primary" type="submit">Upload</button>
+          <div id="video-msg" class="text-sm text-gray-600"></div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Player</h2>
+        <p class="mt-2 text-gray-600">Select an uploaded video to play.</p>
+        <div class="mt-6">
+          <video id="player" class="w-full rounded-xl shadow-lg" controls></video>
+          <div class="mt-4 flex items-center justify-between">
+            <a id="download" class="text-blue-600 font-semibold hover:text-blue-700" href="#">Download</a>
+            <div id="selected" class="text-gray-600 text-sm"></div>
+          </div>
+        </div>
+        <div id="video-list" class="mt-8 space-y-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('video-form');
+    const msg = document.getElementById('video-msg');
+    const list = document.getElementById('video-list');
+    const player = document.getElementById('player');
+    const download = document.getElementById('download');
+    const selected = document.getElementById('selected');
+
+    function addVideoRow(file) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+      row.textContent = file.name;
+      row.addEventListener('click', () => {
+        player.src = file.url;
+        download.href = `/download/videos/${file.url.split('/').pop()}`;
+        selected.textContent = file.name;
+        player.play();
+      });
+      list.prepend(row);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+
+      const fd = new FormData(form);
+      const res = await fetch('/api/upload/video', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Upload failed.';
+        return;
+      }
+
+      addVideoRow(data.file);
+      form.reset();
+      msg.textContent = 'Uploaded.';
+    });
+  </script>
+</body>
+</html>

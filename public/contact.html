@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/books" class="nav-link">Books</a>
+        <a href="/videos" class="nav-link">Videos</a>
+        <a href="/files" class="nav-link">Files</a>
+        <a href="/projects" class="nav-link">Projects</a>
+        <a href="/contact" class="nav-link text-blue-600">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <header class="max-w-3xl">
+      <h1 class="text-4xl font-bold gradient-text">Contact</h1>
+      <p class="mt-4 text-gray-600 text-lg">Send me a message. Inputs are sanitized server-side.</p>
+    </header>
+
+    <section class="mt-10 max-w-2xl">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <form id="contact" class="space-y-6">
+          <input name="name" required placeholder="Your Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <input name="email" required type="email" placeholder="Your Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <textarea name="message" required rows="6" placeholder="Your Message" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+          <button class="btn-primary w-full" type="submit">Send</button>
+          <div id="contact-msg" class="text-sm"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('contact');
+    const msg = document.getElementById('contact-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'text-sm';
+
+      const fd = new FormData(form);
+      const payload = {
+        name: fd.get('name'),
+        email: fd.get('email'),
+        message: fd.get('message')
+      };
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Failed to send.';
+        msg.className = 'text-sm text-red-600';
+        return;
+      }
+
+      msg.textContent = 'Sent. Thank you!';
+      msg.className = 'text-sm text-green-600 font-semibold';
+      form.reset();
+    });
+  </script>
+</body>
+</html>

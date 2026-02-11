@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Files | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/books" class="nav-link">Books</a>
+        <a href="/videos" class="nav-link">Videos</a>
+        <a href="/projects" class="nav-link">Projects</a>
+        <a href="/files" class="nav-link text-blue-600">Files</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <header class="max-w-3xl">
+      <h1 class="text-4xl font-bold gradient-text">Files</h1>
+      <p class="mt-4 text-gray-600 text-lg">Upload files (resumes, reports) and get download links.</p>
+    </header>
+
+    <section class="mt-10 grid lg:grid-cols-2 gap-10">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Upload a file</h2>
+        <form id="file-form" class="mt-6 space-y-4">
+          <input type="file" name="file" required class="w-full" />
+          <button class="btn-primary" type="submit">Upload</button>
+          <div id="file-msg" class="text-sm text-gray-600"></div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-semibold">Uploaded</h2>
+        <p class="mt-2 text-gray-600">New uploads appear here.</p>
+        <div id="file-list" class="mt-6 space-y-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('file-form');
+    const msg = document.getElementById('file-msg');
+    const list = document.getElementById('file-list');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+
+      const fd = new FormData(form);
+      const res = await fetch('/api/upload/file', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Upload failed.';
+        return;
+      }
+
+      const row = document.createElement('div');
+      row.className = 'p-4 bg-gray-50 rounded-lg flex items-center justify-between gap-4';
+
+      const name = document.createElement('div');
+      name.className = 'font-semibold text-gray-800 truncate';
+      name.textContent = data.file.name;
+
+      const dl = document.createElement('a');
+      dl.href = `/download/files/${data.file.url.split('/').pop()}`;
+      dl.className = 'text-blue-600 font-semibold hover:text-blue-700 shrink-0';
+      dl.textContent = 'Download';
+
+      row.appendChild(name);
+      row.appendChild(dl);
+      list.prepend(row);
+
+      form.reset();
+      msg.textContent = 'Uploaded.';
+    });
+  </script>
+</body>
+</html>

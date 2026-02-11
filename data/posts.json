@@ -1,0 +1,10 @@
+{
+  "posts": [
+    {
+      "id": "welcome",
+      "title": "Welcome to my blog",
+      "body": "<p>This is a starter post. Use the API to add more posts.</p>",
+      "createdAt": "2026-02-11T00:00:00.000Z"
+    }
+  ]
+}

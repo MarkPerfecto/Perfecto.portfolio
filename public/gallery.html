@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery | Mark Perfecto</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/home" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="/home" class="nav-link">Home</a>
+        <a href="/gallery" class="nav-link text-blue-600">Gallery</a>
+        <a href="/projects" class="nav-link">Projects</a>
+        <a href="/blog" class="nav-link">Blog</a>
+        <a href="/books" class="nav-link">Books</a>
+        <a href="/videos" class="nav-link">Videos</a>
+        <a href="/files" class="nav-link">Files</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-16">
+    <header class="max-w-3xl">
+      <h1 class="text-4xl font-bold gradient-text">Gallery</h1>
+      <p class="mt-4 text-gray-600 text-lg">Screenshots, project visuals, and moments from my IT journey.</p>
+    </header>
+
+    <section class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <a href="#" class="bg-white rounded-xl overflow-hidden shadow-lg card-hover">
+        <img class="w-full h-48 object-cover" src="https://images.unsplash.com/photo-1526378722484-bd91ca387e72?w=800&h=500&fit=crop" alt="Workstation" />
+        <div class="p-6">
+          <h2 class="text-xl font-semibold">Builds & Experiments</h2>
+          <p class="mt-2 text-gray-600">UI prototypes, experiments, and code snapshots.</p>
+        </div>
+      </a>
+
+      <a href="#" class="bg-white rounded-xl overflow-hidden shadow-lg card-hover">
+        <img class="w-full h-48 object-cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=500&fit=crop" alt="Code" />
+        <div class="p-6">
+          <h2 class="text-xl font-semibold">Projects</h2>
+          <p class="mt-2 text-gray-600">Screenshots from apps I’ve built and maintained.</p>
+        </div>
+      </a>
+
+      <a href="#" class="bg-white rounded-xl overflow-hidden shadow-lg card-hover">
+        <img class="w-full h-48 object-cover" src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&h=500&fit=crop" alt="Team" />
+        <div class="p-6">
+          <h2 class="text-xl font-semibold">Collaboration</h2>
+          <p class="mt-2 text-gray-600">Highlights from team work, demos, and learning.</p>
+        </div>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
