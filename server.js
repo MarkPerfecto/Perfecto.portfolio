@@ -176,6 +176,7 @@ app.get('/projects', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'proj
 app.get('/projects/character-creator', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'projects', 'character_creator.html')));
 app.get('/projects/hotel-reservation', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'projects', 'hotel_reservation.html')));
 app.get('/projects/notes-certifications', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'projects', 'notes_certifications.html')));
+app.get('/projects/anigen', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'projects', 'anigen.html')));
 app.get('/blog', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'blog.html')));
 app.get('/books', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'books.html')));
 app.get('/videos', (req, res) => safeSendFile(res, path.join(PUBLIC_DIR, 'videos.html')));
