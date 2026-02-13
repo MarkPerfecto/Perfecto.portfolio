@@ -122,6 +122,29 @@
       margin-bottom: 16px;
     }
 
+    .ctrl-seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 200px;
+      border: 1px solid #94a3b8;
+      background: #f8fafc;
+    }
+
+    .ctrl-seg input { display: none; }
+
+    .ctrl-seg label {
+      padding: 6px 10px;
+      text-align: center;
+      font-weight: 700;
+      color: #111827;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ctrl-seg input:checked + label {
+      background: linear-gradient(#f8fafc, #cbd5e1);
+    }
+
     .btn-action {
       width: 96px;
       height: 30px;
@@ -158,6 +181,16 @@
         </div>
 
         <aside class="control-col" aria-label="Controls">
+          <div class="ctrl-group">
+            <div class="ctrl-title">Gender</div>
+            <div class="ctrl-seg" role="radiogroup" aria-label="Gender">
+              <input id="genderMale" name="gender" type="radio" value="male" checked />
+              <label for="genderMale">Male</label>
+              <input id="genderFemale" name="gender" type="radio" value="female" />
+              <label for="genderFemale">Female</label>
+            </div>
+          </div>
+
           <div class="ctrl-group">
             <div class="ctrl-title">Base</div>
             <div class="ctrl-row">
@@ -204,6 +237,8 @@
   <script>
     const els = {
       canvas: document.getElementById('preview'),
+      genderMale: document.getElementById('genderMale'),
+      genderFemale: document.getElementById('genderFemale'),
       basePrev: document.getElementById('basePrev'),
       baseNext: document.getElementById('baseNext'),
       facePrev: document.getElementById('facePrev'),
@@ -225,6 +260,11 @@
       baseIndex: 0,
       faceIndex: 0,
       hairIndex: 0,
+      gender: 'male',
+      baseSets: {
+        male: [],
+        female: [],
+      },
       bases: [],
       faces: [],
       hairs: [],
@@ -303,11 +343,20 @@
     }
 
     function render() {
+      state.bases = state.baseSets[state.gender] || [];
       state.baseIndex = clampIndex(state.baseIndex, state.bases.length);
       state.faceIndex = clampIndex(state.faceIndex, state.faces.length);
       state.hairIndex = clampIndex(state.hairIndex, state.hairs.length);
       updateLabels();
       drawToContext(ctx, els.canvas.width, els.canvas.height, els.circle.checked);
+    }
+
+    function setGender(next) {
+      if (next !== 'male' && next !== 'female') return;
+      if (state.gender === next) return;
+      state.gender = next;
+      state.baseIndex = 0;
+      render();
     }
 
     function randomize() {
@@ -380,15 +429,19 @@
       state.hairIndex += 1;
       render();
     });
+    els.genderMale.addEventListener('change', () => setGender('male'));
+    els.genderFemale.addEventListener('change', () => setGender('female'));
     els.circle.addEventListener('change', render);
     els.random.addEventListener('click', randomize);
     els.reset.addEventListener('click', reset);
     els.save.addEventListener('click', savePng);
 
     (async function init() {
-      state.bases = await loadSequence('p');
+      state.baseSets.male = await loadSequence('p');
+      state.baseSets.female = await loadSequence('girl');
       state.faces = await loadSequence('face');
       state.hairs = await loadSequence('hair');
+      state.gender = els.genderFemale && els.genderFemale.checked ? 'female' : 'male';
       render();
     })();
   </script>
