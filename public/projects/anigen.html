@@ -33,18 +33,23 @@
 
     <section class="mt-8 grid lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-6">
-        <div class="bg-white rounded-2xl shadow-xl p-6">
-          <div class="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h2 class="text-2xl font-semibold">Interactive Demo (Web)</h2>
-              <p class="mt-2 text-gray-600">Use the controls to adjust base, face, hair, colors, and export a JSON profile.</p>
+        <div class="terminal-panel">
+          <div class="terminal-bar">
+            <div class="terminal-dots" aria-hidden="true">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
             </div>
+            <div class="terminal-title">INTERACTIVE DEMO</div>
             <a class="btn-secondary w-full sm:w-auto text-center" href="/demos/anigen/index.html" target="_blank" rel="noreferrer">Open demo</a>
           </div>
-          <div class="mt-5 rounded-xl overflow-hidden border border-gray-200 bg-white">
-            <iframe title="Anigen Web Demo" class="w-full" style="height:640px" src="/demos/anigen/index.html" loading="lazy"></iframe>
+          <div class="terminal-body">
+            <p class="text-gray-600">Use the controls to adjust base, face, hair, colors, and export a JSON profile.</p>
+            <div class="mt-5 rounded-xl overflow-hidden border border-gray-200 bg-white">
+              <iframe title="Anigen Web Demo" class="w-full" style="height:640px" src="/demos/anigen/index.html" loading="lazy"></iframe>
+            </div>
+            <div class="mt-3 text-sm text-gray-500">If the embed is blocked by the browser, use the <span class="font-semibold">Open demo</span> button.</div>
           </div>
-          <div class="mt-3 text-sm text-gray-500">If the embed is blocked by the browser, use the <span class="font-semibold">Open demo</span> button.</div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-6">
@@ -67,10 +72,20 @@
       </div>
 
       <aside class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-xl p-6">
+        <div class="terminal-panel">
+          <div class="terminal-bar">
+            <div class="terminal-dots" aria-hidden="true">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+            </div>
+            <div class="terminal-title">LINKS</div>
+          </div>
+          <div class="terminal-body">
           <h2 class="text-xl font-semibold">Links</h2>
           <div class="mt-5 space-y-3">
-            <a class="block text-blue-600 font-semibold hover:text-blue-700" href="/demos/anigen/index.html" target="_blank" rel="noreferrer">Open web demo</a>
+            <a class="block neon-link" href="/demos/anigen/index.html" target="_blank" rel="noreferrer">Open web demo</a>
+          </div>
           </div>
         </div>
 
