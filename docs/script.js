@@ -88,9 +88,9 @@ window.addEventListener('scroll', () => {
     });
 
     navLinks.forEach(link => {
-        link.classList.remove('text-blue-600');
+        link.classList.remove('neon-link');
         if (link.getAttribute('href').slice(1) === current) {
-            link.classList.add('text-blue-600');
+            link.classList.add('neon-link');
         }
     });
 });
