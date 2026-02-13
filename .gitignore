@@ -3,3 +3,7 @@ node_modules/
 .vscode/
 uploads/
 public/books/
+
+!uploads/
+!uploads/files/
+!uploads/files/anigen-source.zip
