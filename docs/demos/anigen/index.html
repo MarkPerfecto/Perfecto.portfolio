@@ -6,338 +6,391 @@
   <title>Anigen (Web Demo)</title>
   <link rel="stylesheet" href="../../dist/output.css" />
   <style>
-    :root {
-      --skin: #f1c27d;
-      --hair: #111827;
-      --accent: #2563eb;
-      --bg: #f8fafc;
+    .demo-shell {
+      min-height: 100vh;
+      background: #ffffff;
     }
 
-    .demo-shell { background: var(--bg); }
-
-    .avatar-wrap { aspect-ratio: 1 / 1; }
-
-    .hair-short { border-radius: 9999px 9999px 24px 24px; }
-    .hair-long { border-radius: 9999px 9999px 36px 36px; height: 110px !important; }
-    .hair-spiky {
-      border-radius: 9999px;
-      clip-path: polygon(0% 100%, 6% 70%, 14% 95%, 22% 68%, 30% 96%, 38% 66%, 46% 97%, 54% 65%, 62% 96%, 70% 68%, 78% 95%, 86% 70%, 94% 98%, 100% 100%, 100% 0%, 0% 0%);
+    .anigen-window {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: 18px;
     }
 
-    .face-neutral { transform: translateY(0); }
-    .face-happy { transform: translateY(-1px); }
-    .face-angry { transform: translateY(1px); }
+    .anigen-titlebar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 46px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 700;
+      color: #111827;
+      font-size: 20px;
+    }
 
-    .mouth-neutral { width: 44px; height: 6px; border-radius: 9999px; background: #111827; }
-    .mouth-happy { width: 48px; height: 18px; border: 4px solid #111827; border-top: 0; border-left: 0; border-right: 0; border-radius: 0 0 9999px 9999px; }
-    .mouth-angry { width: 46px; height: 6px; border-radius: 9999px; background: #111827; transform: rotate(-6deg); }
+    .anigen-main {
+      display: grid;
+      grid-template-columns: 1fr 270px;
+      gap: 22px;
+      padding-top: 16px;
+    }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    @media (max-width: 900px) {
+      .anigen-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .preview-wrap {
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+    }
+
+    .preview-frame {
+      width: 520px;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      display: grid;
+      place-items: center;
+    }
+
+    canvas {
+      width: 480px;
+      height: 480px;
+      max-width: 96%;
+      max-height: 96%;
+    }
+
+    .control-col {
+      background: #ffffff;
+      padding-top: 14px;
+    }
+
+    .ctrl-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .ctrl-title {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .ctrl-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-arrow {
+      width: 52px;
+      height: 28px;
+      border: 1px solid #94a3b8;
+      background: linear-gradient(#f8fafc, #cbd5e1);
+      color: #111827;
+      font-weight: 700;
+      border-radius: 0;
+    }
+
+    .ctrl-label {
+      font-weight: 600;
+      color: #111827;
+      min-height: 18px;
+    }
+
+    .ctrl-checkbox {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #111827;
+      margin: 10px 0 18px;
+    }
+
+    .ctrl-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .btn-action {
+      width: 96px;
+      height: 30px;
+      border: 1px solid #94a3b8;
+      background: linear-gradient(#f8fafc, #cbd5e1);
+      color: #111827;
+      font-weight: 700;
+      border-radius: 0;
+    }
+
+    .btn-save {
+      width: 140px;
+      height: 34px;
+      border: 1px solid #94a3b8;
+      background: linear-gradient(#f8fafc, #cbd5e1);
+      color: #111827;
+      font-weight: 700;
+      border-radius: 0;
+      display: block;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body class="bg-gray-50">
-  <main class="demo-shell min-h-screen">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-      <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold gradient-text">Anigen (Web Demo)</h1>
-          <p class="mt-1 text-gray-600">A static, browser-based demo inspired by your Anigen desktop app workflow.</p>
-        </div>
-        <div class="flex gap-2">
-          <button id="btnReset" type="button" class="btn-secondary">Reset</button>
-          <button id="btnExport" type="button" class="btn-primary">Export JSON</button>
-        </div>
-      </header>
+  <main class="demo-shell">
+    <div class="anigen-window">
+      <div class="anigen-titlebar">Anigen</div>
 
-      <section class="mt-5 grid lg:grid-cols-3 gap-4 sm:gap-6">
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-          <h2 class="text-lg font-semibold">Live Preview</h2>
-          <p class="mt-1 text-sm text-gray-600">Change base/face/hair + colors, then export your build.</p>
-
-          <div class="mt-4 grid sm:grid-cols-2 gap-4">
-            <div class="bg-gray-50 rounded-xl p-4">
-              <div class="avatar-wrap w-full rounded-2xl border border-gray-200 bg-white grid place-items-center p-4">
-                <div class="w-full max-w-sm">
-                  <div class="relative mx-auto" style="width: min(300px, 100%);">
-                    <div class="rounded-3xl border border-gray-200 overflow-hidden bg-white">
-                      <div class="p-6 sm:p-7">
-                        <div class="mx-auto w-44 h-44 relative" id="faceRoot">
-                          <div class="absolute inset-0 rounded-full" id="skin" style="background: var(--skin);"></div>
-
-                          <div class="absolute left-1/2 -translate-x-1/2 -top-1 w-[196px] h-[92px]" id="hair" style="background: var(--hair);"></div>
-
-                          <div class="absolute left-1/2 -translate-x-1/2 top-[64px] w-28 h-9 flex items-center justify-between px-2">
-                            <div class="w-8 h-8 rounded-full border border-gray-200 bg-white grid place-items-center">
-                              <div class="w-3.5 h-3.5 rounded-full" id="eyeL" style="background: var(--accent);"></div>
-                            </div>
-                            <div class="w-8 h-8 rounded-full border border-gray-200 bg-white grid place-items-center">
-                              <div class="w-3.5 h-3.5 rounded-full" id="eyeR" style="background: var(--accent);"></div>
-                            </div>
-                          </div>
-
-                          <div class="absolute left-1/2 -translate-x-1/2 top-[114px] w-20 h-10 rounded-2xl border border-gray-200 bg-white grid place-items-center">
-                            <div id="mouth" class="mouth-neutral"></div>
-                          </div>
-                        </div>
-
-                        <div class="mt-4 mx-auto w-52 h-24 rounded-3xl border border-gray-200 bg-white overflow-hidden">
-                          <div id="basePattern" class="w-full h-full"></div>
-                        </div>
-
-                        <div class="mt-3 text-center">
-                          <div id="namePreview" class="font-semibold">Unnamed</div>
-                          <div class="text-sm text-gray-600" id="summaryPreview">Base • Face • Hair</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-3 text-xs text-gray-500">Tip: this is a static demo for your portfolio. The desktop app remains the full version.</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-gray-50 rounded-xl p-4">
-              <h3 class="font-semibold">Current Build (JSON)</h3>
-              <pre id="jsonPreview" class="mt-2 text-xs overflow-auto bg-white border border-gray-200 rounded-xl p-3" style="max-height: 340px;"></pre>
-              <a id="downloadLink" class="sr-only" download="anigen.json" href="#">Download</a>
-              <button type="button" id="btnCopy" class="btn-secondary w-full mt-3">Copy JSON</button>
-            </div>
+      <div class="anigen-main">
+        <div class="preview-wrap">
+          <div class="preview-frame">
+            <canvas id="preview" width="520" height="520" aria-label="Character preview"></canvas>
           </div>
         </div>
 
-        <aside class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-          <h2 class="text-lg font-semibold">Customize</h2>
-          <form class="mt-4 space-y-4" id="controls" aria-label="Anigen customization controls">
-            <div>
-              <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-              <input id="name" name="name" type="text" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Anigen-01" />
+        <aside class="control-col" aria-label="Controls">
+          <div class="ctrl-group">
+            <div class="ctrl-title">Base</div>
+            <div class="ctrl-row">
+              <button id="basePrev" type="button" class="btn-arrow" aria-label="Previous base">&lt;</button>
+              <button id="baseNext" type="button" class="btn-arrow" aria-label="Next base">&gt;</button>
             </div>
+            <div id="baseLabel" class="ctrl-label"></div>
+          </div>
 
-            <div>
-              <label for="base" class="block text-sm font-medium text-gray-700">Base</label>
-              <select id="base" name="base" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="classic">Classic</option>
-                <option value="grid">Grid</option>
-                <option value="gradient">Gradient</option>
-              </select>
+          <div class="ctrl-group">
+            <div class="ctrl-title">Face</div>
+            <div class="ctrl-row">
+              <button id="facePrev" type="button" class="btn-arrow" aria-label="Previous face">&lt;</button>
+              <button id="faceNext" type="button" class="btn-arrow" aria-label="Next face">&gt;</button>
             </div>
+            <div id="faceLabel" class="ctrl-label"></div>
+          </div>
 
-            <div>
-              <label for="face" class="block text-sm font-medium text-gray-700">Face</label>
-              <select id="face" name="face" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="neutral">Neutral</option>
-                <option value="happy">Happy</option>
-                <option value="angry">Angry</option>
-              </select>
+          <div class="ctrl-group">
+            <div class="ctrl-title">Hair</div>
+            <div class="ctrl-row">
+              <button id="hairPrev" type="button" class="btn-arrow" aria-label="Previous hair">&lt;</button>
+              <button id="hairNext" type="button" class="btn-arrow" aria-label="Next hair">&gt;</button>
             </div>
+            <div id="hairLabel" class="ctrl-label"></div>
+          </div>
 
-            <div>
-              <label for="hairStyle" class="block text-sm font-medium text-gray-700">Hair Style</label>
-              <select id="hairStyle" name="hairStyle" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="short">Short</option>
-                <option value="long">Long</option>
-                <option value="spiky">Spiky</option>
-              </select>
-            </div>
+          <label class="ctrl-checkbox">
+            <input id="circle" type="checkbox" checked />
+            Circle preview
+          </label>
 
-            <div>
-              <label for="skinColor" class="block text-sm font-medium text-gray-700">Skin</label>
-              <input id="skinColor" name="skinColor" type="color" class="mt-1 w-full h-11 rounded-xl border border-gray-200 p-1 bg-white" value="#f1c27d" />
-            </div>
+          <div class="ctrl-actions">
+            <button id="random" type="button" class="btn-action">Random</button>
+            <button id="reset" type="button" class="btn-action">Reset</button>
+          </div>
 
-            <div>
-              <label for="hairColor" class="block text-sm font-medium text-gray-700">Hair</label>
-              <input id="hairColor" name="hairColor" type="color" class="mt-1 w-full h-11 rounded-xl border border-gray-200 p-1 bg-white" value="#111827" />
-            </div>
-
-            <div>
-              <label for="accentColor" class="block text-sm font-medium text-gray-700">Accent (Eyes)</label>
-              <input id="accentColor" name="accentColor" type="color" class="mt-1 w-full h-11 rounded-xl border border-gray-200 p-1 bg-white" value="#2563eb" />
-            </div>
-
-            <div>
-              <label for="bgColor" class="block text-sm font-medium text-gray-700">Background</label>
-              <input id="bgColor" name="bgColor" type="color" class="mt-1 w-full h-11 rounded-xl border border-gray-200 p-1 bg-white" value="#f8fafc" />
-            </div>
-
-            <div class="text-xs text-gray-500">Accessibility: all controls are labeled. Keyboard navigation works for all inputs.</div>
-          </form>
+          <button id="save" type="button" class="btn-save">Save as PNG</button>
         </aside>
-      </section>
+      </div>
     </div>
   </main>
 
   <script>
-    const STORAGE_KEY = 'mp_anigen_demo_v1';
-
     const els = {
-      name: document.getElementById('name'),
-      base: document.getElementById('base'),
-      face: document.getElementById('face'),
-      hairStyle: document.getElementById('hairStyle'),
-      skinColor: document.getElementById('skinColor'),
-      hairColor: document.getElementById('hairColor'),
-      accentColor: document.getElementById('accentColor'),
-      bgColor: document.getElementById('bgColor'),
-      jsonPreview: document.getElementById('jsonPreview'),
-      namePreview: document.getElementById('namePreview'),
-      summaryPreview: document.getElementById('summaryPreview'),
-      faceRoot: document.getElementById('faceRoot'),
-      hair: document.getElementById('hair'),
-      mouth: document.getElementById('mouth'),
-      basePattern: document.getElementById('basePattern'),
-      downloadLink: document.getElementById('downloadLink'),
-      btnReset: document.getElementById('btnReset'),
-      btnExport: document.getElementById('btnExport'),
-      btnCopy: document.getElementById('btnCopy'),
+      canvas: document.getElementById('preview'),
+      basePrev: document.getElementById('basePrev'),
+      baseNext: document.getElementById('baseNext'),
+      facePrev: document.getElementById('facePrev'),
+      faceNext: document.getElementById('faceNext'),
+      hairPrev: document.getElementById('hairPrev'),
+      hairNext: document.getElementById('hairNext'),
+      baseLabel: document.getElementById('baseLabel'),
+      faceLabel: document.getElementById('faceLabel'),
+      hairLabel: document.getElementById('hairLabel'),
+      circle: document.getElementById('circle'),
+      random: document.getElementById('random'),
+      reset: document.getElementById('reset'),
+      save: document.getElementById('save'),
     };
 
-    function clampName(v) {
-      return String(v || '').trim().slice(0, 40);
+    const ctx = els.canvas.getContext('2d');
+
+    const state = {
+      baseIndex: 0,
+      faceIndex: 0,
+      hairIndex: 0,
+      bases: [],
+      faces: [],
+      hairs: [],
+    };
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load ${src}`));
+        img.src = src;
+      });
     }
 
-    function patternCss(base) {
-      if (base === 'grid') {
-        return 'repeating-linear-gradient(0deg, rgba(37,99,235,0.18), rgba(37,99,235,0.18) 2px, transparent 2px, transparent 18px), repeating-linear-gradient(90deg, rgba(147,51,234,0.14), rgba(147,51,234,0.14) 2px, transparent 2px, transparent 18px)';
+    async function loadSequence(prefix, max = 50) {
+      const images = [];
+      for (let i = 1; i <= max; i += 1) {
+        const src = `assets/${prefix}${i}.png`;
+        try {
+          const img = await loadImage(src);
+          images.push(img);
+        } catch (_) {
+          break;
+        }
       }
-      if (base === 'gradient') {
-        return 'linear-gradient(135deg, rgba(37,99,235,0.35), rgba(147,51,234,0.25), rgba(16,185,129,0.18))';
+      return images;
+    }
+
+    function clampIndex(idx, len) {
+      if (len <= 0) return 0;
+      return ((idx % len) + len) % len;
+    }
+
+    function updateLabels() {
+      els.baseLabel.textContent = state.bases.length ? `Base ${state.baseIndex + 1} / ${state.bases.length}` : 'Base -';
+      els.faceLabel.textContent = state.faces.length ? `Face ${state.faceIndex + 1} / ${state.faces.length}` : 'Face -';
+      els.hairLabel.textContent = state.hairs.length ? `Hair ${state.hairIndex + 1} / ${state.hairs.length}` : 'Hair -';
+    }
+
+    function drawToContext(targetCtx, w, h, circleClip) {
+      targetCtx.clearRect(0, 0, w, h);
+
+      const base = state.bases[state.baseIndex] || null;
+      const face = state.faces[state.faceIndex] || null;
+      const hair = state.hairs[state.hairIndex] || null;
+
+      const reference = base || face || hair;
+      if (!reference) return;
+
+      const refW = reference.naturalWidth || reference.width;
+      const refH = reference.naturalHeight || reference.height;
+
+      const scale = Math.min(w / refW, h / refH);
+      const drawW = Math.round(refW * scale);
+      const drawH = Math.round(refH * scale);
+      const x = Math.round((w - drawW) / 2);
+      const y = Math.round((h - drawH) / 2);
+
+      if (circleClip) {
+        const diameter = Math.min(w, h);
+        const clipX = Math.round((w - diameter) / 2);
+        const clipY = Math.round((h - diameter) / 2);
+        targetCtx.save();
+        targetCtx.beginPath();
+        targetCtx.ellipse(clipX + diameter / 2, clipY + diameter / 2, diameter / 2, diameter / 2, 0, 0, Math.PI * 2);
+        targetCtx.clip();
       }
-      return 'linear-gradient(180deg, rgba(17,24,39,0.06), rgba(17,24,39,0))';
+
+      if (base) targetCtx.drawImage(base, x, y, drawW, drawH);
+      if (face) targetCtx.drawImage(face, x, y, drawW, drawH);
+      if (hair) targetCtx.drawImage(hair, x, y, drawW, drawH);
+
+      if (circleClip) {
+        targetCtx.restore();
+      }
     }
 
-    function buildState() {
-      return {
-        name: clampName(els.name.value) || 'Unnamed',
-        base: els.base.value,
-        face: els.face.value,
-        hairStyle: els.hairStyle.value,
-        colors: {
-          skin: els.skinColor.value,
-          hair: els.hairColor.value,
-          accent: els.accentColor.value,
-          background: els.bgColor.value,
-        },
-        updatedAt: new Date().toISOString(),
-      };
+    function render() {
+      state.baseIndex = clampIndex(state.baseIndex, state.bases.length);
+      state.faceIndex = clampIndex(state.faceIndex, state.faces.length);
+      state.hairIndex = clampIndex(state.hairIndex, state.hairs.length);
+      updateLabels();
+      drawToContext(ctx, els.canvas.width, els.canvas.height, els.circle.checked);
     }
 
-    function syncUI() {
-      const state = buildState();
-
-      document.documentElement.style.setProperty('--skin', state.colors.skin);
-      document.documentElement.style.setProperty('--hair', state.colors.hair);
-      document.documentElement.style.setProperty('--accent', state.colors.accent);
-      document.documentElement.style.setProperty('--bg', state.colors.background);
-
-      els.namePreview.textContent = state.name;
-      els.summaryPreview.textContent = `${state.base} • ${state.face} • ${state.hairStyle}`;
-
-      els.hair.classList.remove('hair-short', 'hair-long', 'hair-spiky');
-      els.hair.classList.add(`hair-${state.hairStyle}`);
-
-      els.faceRoot.classList.remove('face-neutral', 'face-happy', 'face-angry');
-      els.faceRoot.classList.add(`face-${state.face}`);
-
-      els.mouth.className = '';
-      if (state.face === 'happy') els.mouth.classList.add('mouth-happy');
-      else if (state.face === 'angry') els.mouth.classList.add('mouth-angry');
-      else els.mouth.classList.add('mouth-neutral');
-
-      els.basePattern.style.background = patternCss(state.base);
-
-      const jsonText = JSON.stringify(state, null, 2);
-      els.jsonPreview.textContent = jsonText;
-
-      try {
-        localStorage.setItem(STORAGE_KEY, jsonText);
-      } catch (_) {}
-
-      const blob = new Blob([jsonText], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      els.downloadLink.href = url;
+    function randomize() {
+      if (state.bases.length) state.baseIndex = Math.floor(Math.random() * state.bases.length);
+      if (state.faces.length) state.faceIndex = Math.floor(Math.random() * state.faces.length);
+      if (state.hairs.length) state.hairIndex = Math.floor(Math.random() * state.hairs.length);
+      render();
     }
 
     function reset() {
-      els.name.value = '';
-      els.base.value = 'classic';
-      els.face.value = 'neutral';
-      els.hairStyle.value = 'short';
-      els.skinColor.value = '#f1c27d';
-      els.hairColor.value = '#111827';
-      els.accentColor.value = '#2563eb';
-      els.bgColor.value = '#f8fafc';
-      syncUI();
+      state.baseIndex = 0;
+      state.faceIndex = 0;
+      state.hairIndex = 0;
+      els.circle.checked = true;
+      render();
     }
 
-    async function copyJson() {
-      const text = els.jsonPreview.textContent || '';
-      try {
-        await navigator.clipboard.writeText(text);
-        els.btnCopy.textContent = 'Copied!';
-        setTimeout(() => (els.btnCopy.textContent = 'Copy JSON'), 900);
-      } catch (_) {
-        els.btnCopy.textContent = 'Copy failed';
-        setTimeout(() => (els.btnCopy.textContent = 'Copy JSON'), 900);
+    function savePng() {
+      const circleClip = els.circle.checked;
+
+      if (!circleClip) {
+        const url = els.canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'anigen.png';
+        a.click();
+        return;
       }
+
+      const diameter = Math.min(els.canvas.width, els.canvas.height);
+      const out = document.createElement('canvas');
+      out.width = diameter;
+      out.height = diameter;
+      const outCtx = out.getContext('2d');
+      outCtx.save();
+      outCtx.beginPath();
+      outCtx.ellipse(diameter / 2, diameter / 2, diameter / 2, diameter / 2, 0, 0, Math.PI * 2);
+      outCtx.clip();
+      drawToContext(outCtx, diameter, diameter, false);
+      outCtx.restore();
+
+      const url = out.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anigen.png';
+      a.click();
     }
 
-    function exportJson() {
-      els.downloadLink.click();
-    }
+    els.basePrev.addEventListener('click', () => {
+      state.baseIndex -= 1;
+      render();
+    });
+    els.baseNext.addEventListener('click', () => {
+      state.baseIndex += 1;
+      render();
+    });
+    els.facePrev.addEventListener('click', () => {
+      state.faceIndex -= 1;
+      render();
+    });
+    els.faceNext.addEventListener('click', () => {
+      state.faceIndex += 1;
+      render();
+    });
+    els.hairPrev.addEventListener('click', () => {
+      state.hairIndex -= 1;
+      render();
+    });
+    els.hairNext.addEventListener('click', () => {
+      state.hairIndex += 1;
+      render();
+    });
+    els.circle.addEventListener('change', render);
+    els.random.addEventListener('click', randomize);
+    els.reset.addEventListener('click', reset);
+    els.save.addEventListener('click', savePng);
 
-    for (const input of [
-      els.name,
-      els.base,
-      els.face,
-      els.hairStyle,
-      els.skinColor,
-      els.hairColor,
-      els.accentColor,
-      els.bgColor,
-    ]) {
-      input.addEventListener('input', syncUI);
-      input.addEventListener('change', syncUI);
-    }
-
-    els.btnReset.addEventListener('click', reset);
-    els.btnExport.addEventListener('click', exportJson);
-    els.btnCopy.addEventListener('click', copyJson);
-
-    // Initialize
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.colors) {
-          els.name.value = parsed.name && parsed.name !== 'Unnamed' ? parsed.name : '';
-          els.base.value = parsed.base || 'classic';
-          els.face.value = parsed.face || 'neutral';
-          els.hairStyle.value = parsed.hairStyle || 'short';
-          els.skinColor.value = parsed.colors.skin || '#f1c27d';
-          els.hairColor.value = parsed.colors.hair || '#111827';
-          els.accentColor.value = parsed.colors.accent || '#2563eb';
-          els.bgColor.value = parsed.colors.background || '#f8fafc';
-        }
-      }
-    } catch (_) {}
-
-    syncUI();
-
-    els.btnReset.addEventListener('click', reset);
-    els.btnExport.addEventListener('click', exportJson);
-    els.btnCopy.addEventListener('click', copyJson);
+    (async function init() {
+      state.bases = await loadSequence('p');
+      state.faces = await loadSequence('face');
+      state.hairs = await loadSequence('hair');
+      render();
+    })();
   </script>
 </body>
 </html>
