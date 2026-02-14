@@ -304,12 +304,30 @@
       els.hairLabel.textContent = state.hairs.length ? `Hair ${state.hairIndex + 1} / ${state.hairs.length}` : 'Hair -';
     }
 
+    function syncControlAvailability() {
+      const layered = state.gender === 'male';
+      els.facePrev.disabled = !layered;
+      els.faceNext.disabled = !layered;
+      els.hairPrev.disabled = !layered;
+      els.hairNext.disabled = !layered;
+      const opacity = layered ? '1' : '0.45';
+      els.facePrev.style.opacity = opacity;
+      els.faceNext.style.opacity = opacity;
+      els.hairPrev.style.opacity = opacity;
+      els.hairNext.style.opacity = opacity;
+      if (!layered) {
+        els.faceLabel.textContent = 'Face -';
+        els.hairLabel.textContent = 'Hair -';
+      }
+    }
+
     function drawToContext(targetCtx, w, h, circleClip) {
       targetCtx.clearRect(0, 0, w, h);
 
       const base = state.bases[state.baseIndex] || null;
-      const face = state.faces[state.faceIndex] || null;
-      const hair = state.hairs[state.hairIndex] || null;
+      const layered = state.gender === 'male';
+      const face = layered ? (state.faces[state.faceIndex] || null) : null;
+      const hair = layered ? (state.hairs[state.hairIndex] || null) : null;
 
       const reference = base || face || hair;
       if (!reference) return;
@@ -348,6 +366,7 @@
       state.faceIndex = clampIndex(state.faceIndex, state.faces.length);
       state.hairIndex = clampIndex(state.hairIndex, state.hairs.length);
       updateLabels();
+      syncControlAvailability();
       drawToContext(ctx, els.canvas.width, els.canvas.height, els.circle.checked);
     }
 
