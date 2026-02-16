@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Books | Mark Perfecto</title>
+  <link rel="stylesheet" href="./dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="./index.html" class="text-2xl font-bold gradient-text">MP</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="./index.html#home" class="nav-link">Home</a>
+        <a href="./index.html#about" class="nav-link">About</a>
+        <a href="./index.html#skills" class="nav-link">Skills</a>
+        <a href="./projects.html" class="nav-link">Projects</a>
+        <a href="./books.html" class="nav-link neon-link">Books</a>
+        <a href="./index.html#contact" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-6 py-12">
+    <header class="max-w-3xl terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">BOOKS</div>
+      </div>
+      <div class="terminal-body">
+        <h1 class="text-4xl font-bold gradient-text">Interactive Books</h1>
+        <p class="mt-4 text-gray-600 text-lg">GitHub Pages version: everything runs locally in your browser. Upload a PDF to read it like an interactive book (no server needed).</p>
+      </div>
+    </header>
+
+    <section class="mt-8 grid lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+          <h2 class="text-xl font-semibold">Add a PDF</h2>
+          <p class="mt-2 text-gray-600 text-sm">Your PDF is stored in your browser (IndexedDB). Nothing is uploaded anywhere.</p>
+
+          <form id="upload-form" class="mt-5 space-y-4">
+            <input id="pdf-input" type="file" accept="application/pdf" class="w-full" required />
+            <div class="flex gap-3 flex-wrap">
+              <button class="btn-primary" type="submit">Add to library</button>
+              <button id="clear-library" class="btn-secondary" type="button">Clear library</button>
+            </div>
+            <div id="msg" class="text-sm text-gray-600"></div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+          <h2 class="text-xl font-semibold">Library</h2>
+          <div id="library" class="mt-4 space-y-3"></div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 space-y-6">
+        <div class="terminal-panel">
+          <div class="terminal-bar">
+            <div class="terminal-dots" aria-hidden="true">
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+              <span class="terminal-dot"></span>
+            </div>
+            <div class="terminal-title">READER</div>
+          </div>
+          <div class="terminal-body">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div class="text-sm text-gray-600">Now reading</div>
+                <div id="now-reading" class="font-semibold">No book loaded</div>
+              </div>
+              <div class="text-sm text-gray-600" id="meta"></div>
+            </div>
+
+            <div class="mt-5 flex items-center gap-3 flex-wrap">
+              <button id="prev" class="btn-secondary" type="button">Prev</button>
+              <button id="next" class="btn-secondary" type="button">Next</button>
+
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600 text-sm">Page</span>
+                <input id="page" class="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none" style="width: 90px;" type="number" min="1" value="1" />
+                <span class="text-gray-600 text-sm" id="page-count">/ 0</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600 text-sm">Zoom</span>
+                <input id="zoom" type="range" min="50" max="200" value="110" />
+                <span class="text-gray-600 text-sm" id="zoom-label">110%</span>
+              </div>
+            </div>
+
+            <div class="mt-5 bg-white rounded-2xl border border-gray-200 overflow-auto" style="max-height: 70vh;">
+              <div class="p-4">
+                <canvas id="canvas" class="w-full" style="max-width: 100%;"></canvas>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-gray-500">
+              Tip: For DOC/DOCX you’ll need to convert to PDF first (GitHub Pages can’t run server-side converters).
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    // PDF.js worker
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    const DB_NAME = 'mp_books_db_v1';
+    const STORE = 'books';
+
+    const elForm = document.getElementById('upload-form');
+    const elInput = document.getElementById('pdf-input');
+    const elMsg = document.getElementById('msg');
+    const elLibrary = document.getElementById('library');
+
+    const elNow = document.getElementById('now-reading');
+    const elMeta = document.getElementById('meta');
+
+    const elPrev = document.getElementById('prev');
+    const elNext = document.getElementById('next');
+    const elPage = document.getElementById('page');
+    const elPageCount = document.getElementById('page-count');
+    const elZoom = document.getElementById('zoom');
+    const elZoomLabel = document.getElementById('zoom-label');
+
+    const elClearLibrary = document.getElementById('clear-library');
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let state = {
+      currentId: null,
+      currentTitle: null,
+      pdf: null,
+      page: 1,
+      pages: 0,
+      zoom: 1.1,
+      rendering: false,
+    };
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            db.createObjectStore(STORE, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function tx(db, mode) {
+      return db.transaction(STORE, mode).objectStore(STORE);
+    }
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    async function listBooks() {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const store = tx(db, 'readonly');
+        const req = store.getAll();
+        req.onsuccess = () => {
+          const rows = req.result || [];
+          rows.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          resolve(rows);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function putBook(book) {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const store = tx(db, 'readwrite');
+        const req = store.put(book);
+        req.onsuccess = () => resolve(book);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function getBook(id) {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const store = tx(db, 'readonly');
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function clearAll() {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const store = tx(db, 'readwrite');
+        const req = store.clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function el(tag, className, text) {
+      const n = document.createElement(tag);
+      if (className) n.className = className;
+      if (typeof text === 'string') n.textContent = text;
+      return n;
+    }
+
+    function setMsg(text) {
+      elMsg.textContent = text || '';
+    }
+
+    async function renderLibrary() {
+      elLibrary.innerHTML = '';
+      const books = await listBooks();
+
+      if (!books.length) {
+        elLibrary.appendChild(el('div', 'text-gray-600', 'No books yet. Add a PDF to start.'));
+        return;
+      }
+
+      books.forEach((b) => {
+        const row = el('div', 'bg-gray-50 border border-gray-200 rounded-2xl p-4');
+
+        const top = el('div', 'flex items-start justify-between gap-3');
+        const meta = el('div');
+        meta.appendChild(el('div', 'font-semibold', b.title || 'Untitled PDF'));
+        meta.appendChild(el('div', 'text-sm text-gray-600 mt-1', `${(b.pageCount || '?')} pages • ${new Date(b.createdAt).toLocaleString()}`));
+
+        const actions = el('div', 'shrink-0 flex items-center gap-3 flex-wrap justify-end');
+        const openBtn = el('button', 'btn-secondary', 'Open');
+        openBtn.type = 'button';
+        openBtn.addEventListener('click', () => openFromLibrary(b.id));
+
+        const delBtn = el('button', 'btn-secondary', 'Delete');
+        delBtn.type = 'button';
+        delBtn.addEventListener('click', async () => {
+          await putBook({ ...b, deleted: true });
+          // hard delete by rewriting list without it
+          const db = await openDb();
+          await new Promise((resolve, reject) => {
+            const store = tx(db, 'readwrite');
+            const req = store.delete(b.id);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+          });
+          if (state.currentId === b.id) {
+            await closeBook();
+          }
+          await renderLibrary();
+        });
+
+        actions.appendChild(openBtn);
+        actions.appendChild(delBtn);
+
+        top.appendChild(meta);
+        top.appendChild(actions);
+        row.appendChild(top);
+        elLibrary.appendChild(row);
+      });
+    }
+
+    async function closeBook() {
+      state.currentId = null;
+      state.currentTitle = null;
+      state.pdf = null;
+      state.page = 1;
+      state.pages = 0;
+      elNow.textContent = 'No book loaded';
+      elMeta.textContent = '';
+      elPage.value = '1';
+      elPageCount.textContent = '/ 0';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+
+    function clamp(n, min, max) {
+      return Math.min(max, Math.max(min, n));
+    }
+
+    async function renderPage() {
+      if (!state.pdf) return;
+      if (state.rendering) return;
+      state.rendering = true;
+      try {
+        state.page = clamp(Number(state.page) || 1, 1, state.pages || 1);
+        elPage.value = String(state.page);
+
+        const page = await state.pdf.getPage(state.page);
+        const viewport = page.getViewport({ scale: state.zoom });
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        const renderTask = page.render({ canvasContext: ctx, viewport });
+        await renderTask.promise;
+
+        elMeta.textContent = `${state.pages} pages`;
+        elPageCount.textContent = `/ ${state.pages}`;
+      } finally {
+        state.rendering = false;
+      }
+    }
+
+    async function openPdfFromArrayBuffer(arrayBuffer, title, id) {
+      if (!window.pdfjsLib) {
+        setMsg('PDF.js failed to load. Try again later.');
+        return;
+      }
+
+      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+
+      state.currentId = id || null;
+      state.currentTitle = title || 'Untitled PDF';
+      state.pdf = pdf;
+      state.page = 1;
+      state.pages = pdf.numPages;
+
+      elNow.textContent = state.currentTitle;
+      elPage.value = '1';
+      elPageCount.textContent = `/ ${state.pages}`;
+
+      await renderPage();
+    }
+
+    async function openFromLibrary(id) {
+      const book = await getBook(id);
+      if (!book) {
+        setMsg('Book not found in library.');
+        return;
+      }
+      const ab = await book.blob.arrayBuffer();
+      await openPdfFromArrayBuffer(ab, book.title, book.id);
+      setMsg('');
+    }
+
+    elForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setMsg('');
+
+      const f = elInput.files && elInput.files[0];
+      if (!f) {
+        setMsg('Select a PDF first.');
+        return;
+      }
+      if (f.type !== 'application/pdf') {
+        setMsg('Only PDF files are supported here.');
+        return;
+      }
+
+      try {
+        const id = uid();
+        const book = {
+          id,
+          title: f.name,
+          createdAt: Date.now(),
+          blob: f,
+          pageCount: null,
+        };
+
+        // Attempt to compute page count quickly.
+        const ab = await f.arrayBuffer();
+        if (window.pdfjsLib) {
+          const task = window.pdfjsLib.getDocument({ data: ab });
+          const pdf = await task.promise;
+          book.pageCount = pdf.numPages;
+        }
+
+        await putBook(book);
+        elForm.reset();
+        await renderLibrary();
+        await openPdfFromArrayBuffer(ab, book.title, book.id);
+        setMsg('Added to library.');
+      } catch (err) {
+        setMsg('Failed to add PDF.');
+      }
+    });
+
+    elPrev.addEventListener('click', async () => {
+      if (!state.pdf) return;
+      state.page = (state.page || 1) - 1;
+      await renderPage();
+    });
+
+    elNext.addEventListener('click', async () => {
+      if (!state.pdf) return;
+      state.page = (state.page || 1) + 1;
+      await renderPage();
+    });
+
+    elPage.addEventListener('change', async () => {
+      if (!state.pdf) return;
+      state.page = Number(elPage.value) || 1;
+      await renderPage();
+    });
+
+    elZoom.addEventListener('input', async () => {
+      const z = clamp(Number(elZoom.value) || 110, 50, 200);
+      elZoomLabel.textContent = `${z}%`;
+      state.zoom = z / 100;
+      await renderPage();
+    });
+
+    elClearLibrary.addEventListener('click', async () => {
+      await clearAll();
+      await closeBook();
+      await renderLibrary();
+      setMsg('Library cleared.');
+    });
+
+    // init
+    (async () => {
+      elZoomLabel.textContent = `${Number(elZoom.value)}%`;
+      state.zoom = (Number(elZoom.value) || 110) / 100;
+      await renderLibrary();
+    })();
+  </script>
+</body>
+</html>
