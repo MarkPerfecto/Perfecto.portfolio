@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Quiz Builder (Demo)</title>
+  <link rel="stylesheet" href="../../dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <main class="container mx-auto px-6 py-10">
+    <div class="terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">QUIZ BUILDER</div>
+        <a class="btn-secondary w-full sm:w-auto text-center" href="../../projects/quiz_builder.html">Back to project</a>
+      </div>
+      <div class="terminal-body">
+        <p class="text-gray-600">Create multiple choice questions, preview the quiz live, and export JSON.</p>
+
+        <section class="mt-6 grid lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">Builder</h2>
+              <button id="add-question" class="btn-primary">Add question</button>
+            </div>
+
+            <div class="mt-4 space-y-4">
+              <label class="block">
+                <div class="text-sm text-gray-600">Quiz title</div>
+                <input id="quiz-title" class="mt-2 w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none" value="My Quiz" />
+              </label>
+
+              <div id="questions" class="space-y-4"></div>
+
+              <div class="flex flex-wrap gap-3">
+                <button id="export-json" class="btn-secondary">Export JSON</button>
+                <button id="copy-json" class="btn-secondary">Copy JSON</button>
+                <button id="reset" class="btn-secondary">Reset</button>
+              </div>
+
+              <pre id="json-out" class="mt-4 p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm overflow-auto" style="max-height: 280px;"></pre>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">Live preview</h2>
+              <button id="restart" class="btn-secondary">Restart quiz</button>
+            </div>
+            <div id="preview" class="mt-4"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'mp.quiz_builder.v1';
+
+    const elTitle = document.getElementById('quiz-title');
+    const elQuestions = document.getElementById('questions');
+    const elAdd = document.getElementById('add-question');
+    const elExport = document.getElementById('export-json');
+    const elCopy = document.getElementById('copy-json');
+    const elReset = document.getElementById('reset');
+    const elJsonOut = document.getElementById('json-out');
+    const elPreview = document.getElementById('preview');
+    const elRestart = document.getElementById('restart');
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function defaultQuestion() {
+      return {
+        id: uid(),
+        prompt: 'New question',
+        choices: ['A', 'B', 'C', 'D'],
+        answerIndex: 0,
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function getStateFromUI() {
+      const questions = [...elQuestions.querySelectorAll('[data-q]')].map((wrap) => {
+        const id = wrap.getAttribute('data-q');
+        const prompt = wrap.querySelector('[data-prompt]').value;
+        const choiceInputs = [...wrap.querySelectorAll('[data-choice]')];
+        const choices = choiceInputs.map((x) => x.value);
+        const answerIndex = Number(wrap.querySelector('[data-answer]').value) || 0;
+        return { id, prompt, choices, answerIndex };
+      });
+
+      return {
+        title: elTitle.value.trim() || 'Untitled quiz',
+        questions,
+      };
+    }
+
+    function setStateToUI(state) {
+      elTitle.value = state.title || 'My Quiz';
+      elQuestions.innerHTML = '';
+      (state.questions || []).forEach(addQuestionToUI);
+      if ((state.questions || []).length === 0) addQuestionToUI(defaultQuestion());
+    }
+
+    function addQuestionToUI(q) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bg-gray-50 border border-gray-200 rounded-2xl p-4';
+      wrap.setAttribute('data-q', q.id);
+
+      wrap.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1">
+            <div class="text-sm text-gray-600">Question</div>
+            <input data-prompt class="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none" />
+          </div>
+          <button data-remove class="btn-secondary">Remove</button>
+        </div>
+
+        <div class="mt-4 grid sm:grid-cols-2 gap-3">
+          ${q.choices.map((_, idx) => `
+            <label class="block">
+              <div class="text-sm text-gray-600">Choice ${idx + 1}</div>
+              <input data-choice="${idx}" class="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none" />
+            </label>
+          `).join('')}
+        </div>
+
+        <div class="mt-4 flex items-center gap-3 flex-wrap">
+          <div class="text-sm text-gray-600">Correct answer</div>
+          <select data-answer class="px-4 py-3 rounded-xl bg-white border border-gray-200">
+            <option value="0">Choice 1</option>
+            <option value="1">Choice 2</option>
+            <option value="2">Choice 3</option>
+            <option value="3">Choice 4</option>
+          </select>
+        </div>
+      `;
+
+      wrap.querySelector('[data-prompt]').value = q.prompt;
+      wrap.querySelector('[data-answer]').value = String(q.answerIndex ?? 0);
+      [...wrap.querySelectorAll('[data-choice]')].forEach((input) => {
+        const idx = Number(input.getAttribute('data-choice'));
+        input.value = q.choices[idx] ?? '';
+      });
+
+      wrap.querySelector('[data-remove]').addEventListener('click', () => {
+        wrap.remove();
+        persistAndRender();
+      });
+
+      wrap.addEventListener('input', persistAndRender);
+      wrap.addEventListener('change', persistAndRender);
+
+      elQuestions.appendChild(wrap);
+    }
+
+    function renderJson(state) {
+      elJsonOut.textContent = JSON.stringify(state, null, 2);
+    }
+
+    function renderPreview(state) {
+      const total = state.questions.length;
+      if (total === 0) {
+        elPreview.innerHTML = '<div class="text-gray-600">Add a question to begin.</div>';
+        return;
+      }
+
+      const quizRunKey = STORAGE_KEY + '.run';
+      const run = (() => {
+        try { return JSON.parse(sessionStorage.getItem(quizRunKey) || 'null'); } catch { return null; }
+      })() || { index: 0, score: 0, answered: false };
+
+      const q = state.questions[Math.min(run.index, total - 1)];
+      const done = run.index >= total;
+
+      if (done) {
+        elPreview.innerHTML = `
+          <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+            <div class="text-sm text-gray-600">Result</div>
+            <div class="mt-2 text-2xl font-semibold">${state.title}</div>
+            <div class="mt-4 text-gray-600">Score: <span class="font-semibold">${run.score}</span> / ${total}</div>
+            <button id="restart-inner" class="mt-5 btn-primary">Restart</button>
+          </div>
+        `;
+        elPreview.querySelector('#restart-inner').addEventListener('click', () => {
+          sessionStorage.setItem(quizRunKey, JSON.stringify({ index: 0, score: 0, answered: false }));
+          renderPreview(state);
+        });
+        return;
+      }
+
+      elPreview.innerHTML = `
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="text-sm text-gray-600">Question ${run.index + 1} of ${total}</div>
+            <div class="text-sm text-gray-600">Score: <span class="font-semibold">${run.score}</span></div>
+          </div>
+          <div class="mt-3 text-xl font-semibold">${q.prompt}</div>
+          <div class="mt-4 grid gap-3">
+            ${q.choices.map((c, idx) => `
+              <button class="choice btn-secondary text-left" data-idx="${idx}">${c}</button>
+            `).join('')}
+          </div>
+          <div id="feedback" class="mt-4 text-gray-600"></div>
+          <button id="next" class="mt-4 btn-primary" style="display:none;">Next</button>
+        </div>
+      `;
+
+      const feedback = elPreview.querySelector('#feedback');
+      const btnNext = elPreview.querySelector('#next');
+
+      elPreview.querySelectorAll('.choice').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (run.answered) return;
+          const idx = Number(btn.getAttribute('data-idx'));
+          const correct = idx === (q.answerIndex ?? 0);
+          run.answered = true;
+          if (correct) run.score += 1;
+          feedback.textContent = correct ? 'Correct.' : `Incorrect. Correct answer: ${q.choices[q.answerIndex]}`;
+          btnNext.style.display = 'inline-flex';
+          sessionStorage.setItem(quizRunKey, JSON.stringify(run));
+        });
+      });
+
+      btnNext.addEventListener('click', () => {
+        const nextRun = { index: run.index + 1, score: run.score, answered: false };
+        sessionStorage.setItem(quizRunKey, JSON.stringify(nextRun));
+        renderPreview(state);
+      });
+    }
+
+    function persistAndRender() {
+      const state = getStateFromUI();
+      saveState(state);
+      renderJson(state);
+      renderPreview(state);
+    }
+
+    elAdd.addEventListener('click', () => {
+      addQuestionToUI(defaultQuestion());
+      persistAndRender();
+    });
+
+    elExport.addEventListener('click', () => {
+      const state = getStateFromUI();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (state.title || 'quiz').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 500);
+    });
+
+    elCopy.addEventListener('click', async () => {
+      const state = getStateFromUI();
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+        elCopy.textContent = 'Copied';
+        setTimeout(() => (elCopy.textContent = 'Copy JSON'), 900);
+      } catch {
+        elCopy.textContent = 'Copy failed';
+        setTimeout(() => (elCopy.textContent = 'Copy JSON'), 1200);
+      }
+    });
+
+    elReset.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY + '.run');
+      setStateToUI({ title: 'My Quiz', questions: [defaultQuestion()] });
+      persistAndRender();
+    });
+
+    elRestart.addEventListener('click', () => {
+      sessionStorage.setItem(STORAGE_KEY + '.run', JSON.stringify({ index: 0, score: 0, answered: false }));
+      renderPreview(getStateFromUI());
+    });
+
+    const saved = loadState();
+    setStateToUI(saved || { title: 'My Quiz', questions: [defaultQuestion()] });
+    persistAndRender();
+  </script>
+</body>
+</html>

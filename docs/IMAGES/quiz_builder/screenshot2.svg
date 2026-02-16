@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#0A0A0A"/>
+  <rect x="40" y="40" width="1120" height="620" rx="24" fill="#111827" stroke="#00FF66" stroke-opacity="0.35"/>
+  <text x="90" y="170" font-family="Segoe UI, Arial" font-size="64" fill="#EAEAEA">Interactive Quiz Builder</text>
+  <text x="90" y="240" font-family="Segoe UI, Arial" font-size="28" fill="#A0A0A0">Screenshot 2 placeholder</text>
+  <circle cx="930" cy="390" r="140" fill="#00FF66" fill-opacity="0.10" stroke="#00FF66" stroke-opacity="0.28"/>
+  <path d="M835 390h190" stroke="#00FF66" stroke-opacity="0.35" stroke-width="10"/>
+  <path d="M930 295v190" stroke="#00FF66" stroke-opacity="0.35" stroke-width="10"/>
+</svg>

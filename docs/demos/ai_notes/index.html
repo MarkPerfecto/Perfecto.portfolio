@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Powered Study Notes (Demo)</title>
+  <link rel="stylesheet" href="../../dist/output.css" />
+  <style>
+    .note-area { min-height: 320px; }
+    .flashcard { perspective: 900px; }
+    .flashcard-inner { transform-style: preserve-3d; transition: transform 220ms ease; }
+    .flashcard[data-flip="1"] .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-face { backface-visibility: hidden; }
+    .flashcard-back { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <main class="container mx-auto px-6 py-10">
+    <div class="terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">AI NOTES</div>
+        <a class="btn-secondary w-full sm:w-auto text-center" href="../../projects/ai_notes.html">Back to project</a>
+      </div>
+      <div class="terminal-body">
+        <p class="text-gray-600">Markdown notes editor with instant preview, a "summary" generator, and flashcards. Export to PDF uses your browser print dialog.</p>
+
+        <section class="mt-6 grid lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">Editor</h2>
+              <div class="flex gap-3 flex-wrap">
+                <button id="sample" class="btn-secondary">Load sample</button>
+                <button id="save" class="btn-secondary">Save</button>
+              </div>
+            </div>
+            <textarea id="md" class="note-area mt-4 w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none" placeholder="# Topic\n\nWrite notes here..."></textarea>
+
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button id="summarize" class="btn-primary">Generate summary</button>
+              <button id="flashcards" class="btn-secondary">Build flashcards</button>
+              <button id="export" class="btn-secondary">Export to PDF</button>
+              <button id="reset" class="btn-secondary">Reset</button>
+            </div>
+
+            <div class="mt-4 bg-gray-50 border border-gray-200 rounded-2xl p-4">
+              <div class="text-sm text-gray-600">Summary</div>
+              <div id="summary" class="mt-2 text-gray-600"></div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">Preview</h2>
+              <div class="text-sm text-gray-600" id="stats"></div>
+            </div>
+            <article id="preview" class="mt-4 prose max-w-none"></article>
+
+            <div class="mt-6">
+              <h3 class="text-lg font-semibold">Flashcards</h3>
+              <div id="cards" class="mt-3 grid sm:grid-cols-2 gap-4"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <template id="card-template">
+    <div class="flashcard bg-gray-50 border border-gray-200 rounded-2xl p-4" data-flip="0">
+      <div class="flashcard-inner">
+        <div class="flashcard-face">
+          <div class="text-sm text-gray-600">Q</div>
+          <div class="mt-2 font-semibold" data-q></div>
+          <div class="mt-4 text-sm text-gray-600">Click to reveal</div>
+        </div>
+        <div class="flashcard-face flashcard-back">
+          <div class="text-sm text-gray-600">A</div>
+          <div class="mt-2 text-gray-600" data-a></div>
+          <div class="mt-4 text-sm text-gray-600">Click to flip back</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const STORAGE_KEY = 'mp.ai_notes.v1';
+
+    const elMd = document.getElementById('md');
+    const elPreview = document.getElementById('preview');
+    const elStats = document.getElementById('stats');
+    const elSummary = document.getElementById('summary');
+    const elCards = document.getElementById('cards');
+
+    const elSave = document.getElementById('save');
+    const elSample = document.getElementById('sample');
+    const elSummarize = document.getElementById('summarize');
+    const elFlashcards = document.getElementById('flashcards');
+    const elExport = document.getElementById('export');
+    const elReset = document.getElementById('reset');
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function mdToHtml(md) {
+      const lines = String(md || '').split(/\r?\n/);
+      const out = [];
+      let inList = false;
+
+      function closeList() {
+        if (inList) {
+          out.push('</ul>');
+          inList = false;
+        }
+      }
+
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t) {
+          closeList();
+          out.push('<div style="height:10px"></div>');
+          continue;
+        }
+
+        if (t.startsWith('### ')) {
+          closeList();
+          out.push(`<h3>${escapeHtml(t.slice(4))}</h3>`);
+          continue;
+        }
+        if (t.startsWith('## ')) {
+          closeList();
+          out.push(`<h2>${escapeHtml(t.slice(3))}</h2>`);
+          continue;
+        }
+        if (t.startsWith('# ')) {
+          closeList();
+          out.push(`<h1>${escapeHtml(t.slice(2))}</h1>`);
+          continue;
+        }
+        if (t.startsWith('- ')) {
+          if (!inList) {
+            out.push('<ul>');
+            inList = true;
+          }
+          out.push(`<li>${escapeHtml(t.slice(2))}</li>`);
+          continue;
+        }
+
+        closeList();
+        const p = escapeHtml(t)
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/`(.+?)`/g, '<code>$1</code>');
+        out.push(`<p>${p}</p>`);
+      }
+
+      closeList();
+      return out.join('\n');
+    }
+
+    function load() {
+      try {
+        return localStorage.getItem(STORAGE_KEY) || '';
+      } catch {
+        return '';
+      }
+    }
+
+    function save(md) {
+      localStorage.setItem(STORAGE_KEY, md);
+    }
+
+    function computeSummary(md) {
+      const text = String(md || '').replace(/[#*_`>-]/g, ' ');
+      const words = text.split(/\s+/).filter(Boolean);
+      const freq = new Map();
+      for (const w of words) {
+        const key = w.toLowerCase();
+        if (key.length < 4) continue;
+        freq.set(key, (freq.get(key) || 0) + 1);
+      }
+      const top = [...freq.entries()].sort((a,b) => b[1]-a[1]).slice(0, 6).map(([k]) => k);
+      if (words.length === 0) return 'Write some notes first.';
+      return `Key topics: ${top.length ? top.join(', ') : 'n/a'}.`;
+    }
+
+    function buildFlashcards(md) {
+      const lines = String(md || '').split(/\r?\n/);
+      const cards = [];
+      for (const line of lines) {
+        const t = line.trim();
+        if (t.startsWith('## ')) {
+          cards.push({ q: t.slice(3), a: 'Explain this section in your own words.' });
+        } else if (t.startsWith('- ')) {
+          const item = t.slice(2);
+          cards.push({ q: item, a: 'Why is this important?' });
+        }
+      }
+      return cards.slice(0, 12);
+    }
+
+    function render() {
+      const md = elMd.value;
+      elPreview.innerHTML = mdToHtml(md);
+      const words = md.trim() ? md.trim().split(/\s+/).length : 0;
+      const lines = md ? md.split(/\r?\n/).length : 0;
+      elStats.textContent = `${words} words · ${lines} lines`;
+    }
+
+    function renderCards(cards) {
+      elCards.innerHTML = '';
+      if (!cards.length) {
+        elCards.innerHTML = '<div class="text-gray-600">No flashcards yet. Use the button to generate from headings and bullets.</div>';
+        return;
+      }
+      const tpl = document.getElementById('card-template');
+      cards.forEach((c) => {
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        node.querySelector('[data-q]').textContent = c.q;
+        node.querySelector('[data-a]').textContent = c.a;
+        node.addEventListener('click', () => {
+          node.setAttribute('data-flip', node.getAttribute('data-flip') === '1' ? '0' : '1');
+        });
+        elCards.appendChild(node);
+      });
+    }
+
+    elMd.addEventListener('input', () => {
+      render();
+      save(elMd.value);
+    });
+
+    elSave.addEventListener('click', () => {
+      save(elMd.value);
+      elSave.textContent = 'Saved';
+      setTimeout(() => (elSave.textContent = 'Save'), 900);
+    });
+
+    elSample.addEventListener('click', () => {
+      elMd.value = `# Networking Basics\n\n## OSI Model\n- Physical\n- Data Link\n- Network\n- Transport\n- Session\n- Presentation\n- Application\n\n## Key Terms\n- **IP Address**: identifies a host on a network\n- **DNS**: maps domain names to IPs\n- **NAT**: translates private to public addresses\n\n### Quick Study Tip\nUse flashcards for layer responsibilities.`;
+      render();
+      save(elMd.value);
+    });
+
+    elSummarize.addEventListener('click', () => {
+      elSummary.textContent = computeSummary(elMd.value);
+    });
+
+    elFlashcards.addEventListener('click', () => {
+      renderCards(buildFlashcards(elMd.value));
+    });
+
+    elExport.addEventListener('click', () => {
+      const w = window.open('', '_blank');
+      const html = `<!doctype html><html><head><title>Export</title><meta charset="utf-8"/><style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:32px;line-height:1.55} h1,h2,h3{margin:0 0 12px} p,li{margin:0 0 10px} code{background:#f3f4f6;padding:2px 6px;border-radius:6px}</style></head><body>${mdToHtml(elMd.value)}<script>window.onload=()=>{window.print();}<\/script></body></html>`;
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    });
+
+    elReset.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      elMd.value = '';
+      elSummary.textContent = '';
+      renderCards([]);
+      render();
+    });
+
+    elMd.value = load();
+    render();
+    renderCards([]);
+  </script>
+</body>
+</html>

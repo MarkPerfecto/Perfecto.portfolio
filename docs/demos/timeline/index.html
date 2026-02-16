@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Portfolio Timeline (Demo)</title>
+  <link rel="stylesheet" href="../../dist/output.css" />
+  <style>
+    .tl-wrap { position: relative; }
+    .tl-line { position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: rgba(0,255,102,0.25); }
+    .tl-item { position: relative; padding-left: 64px; }
+    .tl-dot { position: absolute; left: 14px; top: 22px; width: 18px; height: 18px; border-radius: 999px; background: rgba(0,255,102,0.45); box-shadow: 0 0 0 6px rgba(0,255,102,0.10); }
+    .tl-card { border: 1px solid rgba(0,255,102,0.12); }
+    .tl-card[aria-expanded="true"] { box-shadow: 0 18px 55px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,255,102,0.30), 0 0 18px rgba(0,255,102,0.14); }
+    .tl-details { display: none; }
+    .tl-card[aria-expanded="true"] .tl-details { display: block; }
+    .tl-card[aria-expanded="true"] .tl-chevron { transform: rotate(180deg); }
+    .tl-chevron { transition: transform 180ms ease; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <main class="container mx-auto px-6 py-10">
+    <div class="terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">TIMELINE</div>
+        <a class="btn-secondary w-full sm:w-auto text-center" href="../../projects/timeline.html">Back to project</a>
+      </div>
+      <div class="terminal-body">
+        <p class="text-gray-600">Scrollable timeline with expandable milestones and subtle reveal animations.</p>
+
+        <div class="mt-6 bg-white rounded-2xl shadow-lg p-5">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="text-xl font-semibold">Milestones</h2>
+            <button id="add" class="btn-secondary">Add milestone</button>
+          </div>
+
+          <div class="mt-4 tl-wrap" id="timeline">
+            <div class="tl-line" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <template id="item-template">
+    <div class="tl-item py-3" data-item>
+      <div class="tl-dot" aria-hidden="true"></div>
+      <button class="tl-card w-full text-left bg-gray-50 rounded-2xl p-4 card-hover" aria-expanded="false" type="button">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-sm text-gray-600" data-meta></div>
+            <div class="mt-1 text-xl font-semibold" data-title></div>
+          </div>
+          <div class="tl-chevron text-gray-600">⌄</div>
+        </div>
+        <div class="tl-details mt-3 text-gray-600" data-details></div>
+        <div class="tl-details mt-4 flex justify-end">
+          <span class="neon-link" data-action>Expand</span>
+        </div>
+      </button>
+    </div>
+  </template>
+
+  <script>
+    const STORAGE_KEY = 'mp.timeline.v1';
+
+    const elTimeline = document.getElementById('timeline');
+    const elAdd = document.getElementById('add');
+    const tpl = document.getElementById('item-template');
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function save(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function defaultState() {
+      return {
+        items: [
+          {
+            id: uid(),
+            when: '2021',
+            title: 'Started building portfolio projects',
+            details: 'Focused on fundamentals: HTML/CSS/JS, troubleshooting, and documenting progress.'
+          },
+          {
+            id: uid(),
+            when: '2023',
+            title: 'Deployed interactive demos',
+            details: 'Added static demos designed to work on GitHub Pages and via Express routes.'
+          },
+          {
+            id: uid(),
+            when: '2026',
+            title: 'Polished UI + consistency',
+            details: 'Unified the dark neon theme, improved navigation, and created reusable components.'
+          }
+        ]
+      };
+    }
+
+    let state = load() || defaultState();
+
+    function render() {
+      elTimeline.querySelectorAll('[data-item]').forEach((n) => n.remove());
+
+      state.items.forEach((it) => {
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        const btn = node.querySelector('button');
+
+        node.querySelector('[data-meta]').textContent = it.when;
+        node.querySelector('[data-title]').textContent = it.title;
+        node.querySelector('[data-details]').textContent = it.details;
+
+        btn.addEventListener('click', () => {
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        });
+
+        elTimeline.appendChild(node);
+      });
+
+      save(state);
+    }
+
+    elAdd.addEventListener('click', () => {
+      const when = prompt('Year / time period?');
+      if (!when) return;
+      const title = prompt('Milestone title?');
+      if (!title) return;
+      const details = prompt('Details?') || '';
+      state.items = [{ id: uid(), when, title, details }, ...state.items];
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

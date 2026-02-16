@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanban Workflow Board (Demo)</title>
+  <link rel="stylesheet" href="../../dist/output.css" />
+  <style>
+    .kb-col { min-height: 360px; }
+    .kb-card { cursor: grab; }
+    .kb-card:active { cursor: grabbing; }
+    .kb-drop { outline: 2px dashed rgba(0,255,102,0.35); outline-offset: 6px; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <main class="container mx-auto px-6 py-10">
+    <div class="terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">KANBAN BOARD</div>
+        <a class="btn-secondary w-full sm:w-auto text-center" href="../../projects/kanban_board.html">Back to project</a>
+      </div>
+      <div class="terminal-body">
+        <p class="text-gray-600">Drag and drop task cards between columns. State persists in localStorage.</p>
+
+        <div class="mt-6 bg-white rounded-2xl shadow-lg p-5">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="text-xl font-semibold">Board</h2>
+            <div class="flex gap-3 flex-wrap">
+              <button id="add" class="btn-primary">Add task</button>
+              <button id="reset" class="btn-secondary">Reset</button>
+            </div>
+          </div>
+
+          <div class="mt-4 grid lg:grid-cols-3 gap-4" id="board"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'mp.kanban_board.v1';
+
+    const COLUMNS = [
+      { id: 'todo', title: 'To do' },
+      { id: 'doing', title: 'In progress' },
+      { id: 'done', title: 'Done' },
+    ];
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function defaultState() {
+      return {
+        columns: {
+          todo: [
+            { id: uid(), text: 'Add a new task' },
+            { id: uid(), text: 'Drag me to In progress' },
+          ],
+          doing: [
+            { id: uid(), text: 'Neon hover effects' },
+          ],
+          done: [
+            { id: uid(), text: 'Persist to localStorage' },
+          ],
+        }
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function moveCard(state, fromCol, toCol, cardId) {
+      const from = state.columns[fromCol] || [];
+      const idx = from.findIndex((c) => c.id === cardId);
+      if (idx < 0) return state;
+      const [card] = from.splice(idx, 1);
+      state.columns[fromCol] = from;
+      state.columns[toCol] = [...(state.columns[toCol] || []), card];
+      return state;
+    }
+
+    const elBoard = document.getElementById('board');
+    const elAdd = document.getElementById('add');
+    const elReset = document.getElementById('reset');
+
+    let state = loadState() || defaultState();
+
+    function render() {
+      elBoard.innerHTML = '';
+
+      COLUMNS.forEach((col) => {
+        const wrap = document.createElement('section');
+        wrap.className = 'bg-gray-50 border border-gray-200 rounded-2xl p-4 kb-col';
+        wrap.setAttribute('data-col', col.id);
+
+        wrap.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="font-semibold">${col.title}</h3>
+            <span class="text-sm text-gray-600">${(state.columns[col.id] || []).length}</span>
+          </div>
+          <div class="mt-3 space-y-3" data-list></div>
+        `;
+
+        const list = wrap.querySelector('[data-list]');
+        (state.columns[col.id] || []).forEach((card) => {
+          const item = document.createElement('div');
+          item.className = 'kb-card bg-white border border-gray-200 rounded-xl p-3 card-hover';
+          item.setAttribute('draggable', 'true');
+          item.setAttribute('data-card', card.id);
+          item.innerHTML = `
+            <div class="text-sm text-gray-600">Task</div>
+            <div class="mt-1 font-semibold">${escapeHtml(card.text)}</div>
+            <div class="mt-3 flex justify-end">
+              <button class="btn-secondary" data-remove>Remove</button>
+            </div>
+          `;
+
+          item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', JSON.stringify({ from: col.id, cardId: card.id }));
+            e.dataTransfer.effectAllowed = 'move';
+          });
+
+          item.querySelector('[data-remove]').addEventListener('click', () => {
+            state.columns[col.id] = (state.columns[col.id] || []).filter((c) => c.id !== card.id);
+            saveState(state);
+            render();
+          });
+
+          list.appendChild(item);
+        });
+
+        wrap.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          wrap.classList.add('kb-drop');
+          e.dataTransfer.dropEffect = 'move';
+        });
+
+        wrap.addEventListener('dragleave', () => wrap.classList.remove('kb-drop'));
+
+        wrap.addEventListener('drop', (e) => {
+          e.preventDefault();
+          wrap.classList.remove('kb-drop');
+
+          let payload;
+          try { payload = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { payload = null; }
+          if (!payload) return;
+
+          if (payload.from === col.id) return;
+          state = moveCard(state, payload.from, col.id, payload.cardId);
+          saveState(state);
+          render();
+        });
+
+        elBoard.appendChild(wrap);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    elAdd.addEventListener('click', () => {
+      const text = prompt('Task name?');
+      if (!text) return;
+      state.columns.todo = [...(state.columns.todo || []), { id: uid(), text }];
+      saveState(state);
+      render();
+    });
+
+    elReset.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      state = defaultState();
+      saveState(state);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

